@@ -1,0 +1,41 @@
+﻿@page "/order"
+@using Microsoft.AspNetCore.Components
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<span>Client Name: </span>
+<input @bind="createOrder.ClientName"/>
+<span>Additional Info: </span>
+<input @bind="createOrder.AdditionalInfo"/>
+
+<button class="btn btn-primary" @onclick="Save">Save</button>
+
+@code {
+
+    private CreateOrderCommand createOrder = new CreateOrderCommand()
+    {
+        OrderLineIds = new List<int> { 1, 2 }
+    };
+    
+    private async Task Save()
+    {
+        HttpResponseMessage response = await Http.PostAsJsonAsync<CreateOrderCommand>("api/Store", createOrder);
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+    
+    private class CreateOrderCommand
+    {
+        public string ClientName { get; set; }
+    
+        public string? AdditionalInfo { get; set; }
+    
+        public List<int> OrderLineIds { get; set; }
+    }
+}

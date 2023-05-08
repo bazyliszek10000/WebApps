@@ -1,0 +1,9 @@
+<p>calc works!</p>
+<div id="container">
+    <div id="left">
+      <app-left-panel (onAdd)="addTask($event)" />
+    </div>
+    <div id="center">
+        <app-right-panel [tasks]="tasks" (onRemove)="removeTask($event)"/>
+    </div>
+</div>

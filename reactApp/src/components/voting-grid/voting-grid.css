@@ -1,0 +1,7 @@
+.grid-header {
+  background-color: gainsboro; 
+}
+
+.grid .col {
+  border: solid 1px black;
+}

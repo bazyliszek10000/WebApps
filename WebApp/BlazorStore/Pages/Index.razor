@@ -1,0 +1,138 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (gridData == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <span>Date From: </span>
+        <input @bind="getOrdersQuery.DateFrom"/>
+        <span>Date To: </span>
+        <input @bind="getOrdersQuery.DateTo"/>
+        <span>Date Status: </span>
+        <input @bind="getOrdersQuery.Status"/>
+        <button @onclick="Search">Search</button>
+    </div>
+        
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Create Date</th>
+            <th>Status</th>
+            <th>Client Name</th>
+            <th>Order price</th>
+            <th>Additional Info</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var forecast in gridData.Orders)
+        {
+            <tr>
+                <td>@forecast.CreateDate.ToShortDateString()</td>
+                <td>@forecast.StatusName</td>
+                <td>@forecast.ClientName</td>
+                <td>@forecast.OrderPrice</td>
+                <td>@forecast.AdditionalInfo</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <button @onclick="PreviousPage">Previous</button>
+    @getOrdersQuery.PageNumber
+    <button @onclick="NextPage">Next</button>
+    @gridData.NumberOfPages
+}
+
+@code {
+
+    private GridDataDto? gridData = new GridDataDto()
+    {
+        NumberOfPages = 1
+    };
+
+    private GetOrdersQuery getOrdersQuery = new GetOrdersQuery()
+    {
+        NumberOfRecords = 10,
+        PageNumber = 1
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        gridData = await Http.GetFromJsonAsync<GridDataDto>($"api/Store?PageNumber={getOrdersQuery.PageNumber}&NumberOfRecords={getOrdersQuery.NumberOfRecords}");
+    }
+    
+    private async Task PreviousPage()
+    {
+        int previousPage = getOrdersQuery.PageNumber - 1;
+        previousPage = previousPage < 1 ? 1 : previousPage;
+        getOrdersQuery.PageNumber = previousPage;
+        
+        gridData = await Http.GetFromJsonAsync<GridDataDto>($"api/Store?DateFrom={getOrdersQuery.DateFrom}&DateTo={getOrdersQuery.DateTo}&Status={getOrdersQuery.Status}&PageNumber={getOrdersQuery.PageNumber}&NumberOfRecords={getOrdersQuery.NumberOfRecords}");
+    }
+    
+    private async Task NextPage()
+    {
+        int nextPage = getOrdersQuery.PageNumber + 1;
+        nextPage = nextPage > gridData.NumberOfPages ? gridData.NumberOfPages : nextPage;
+        getOrdersQuery.PageNumber = nextPage;
+        
+        gridData = await Http.GetFromJsonAsync<GridDataDto>($"api/Store?DateFrom={getOrdersQuery.DateFrom}&DateTo={getOrdersQuery.DateTo}&Status={getOrdersQuery.Status}&PageNumber={getOrdersQuery.PageNumber}&NumberOfRecords={getOrdersQuery.NumberOfRecords}");
+    }
+    
+    private async Task Search()
+    {
+        gridData = await Http.GetFromJsonAsync<GridDataDto>($"api/Store?DateFrom={getOrdersQuery.DateFrom}&DateTo={getOrdersQuery.DateTo}&Status={getOrdersQuery.Status}&PageNumber={getOrdersQuery.PageNumber}&NumberOfRecords={getOrdersQuery.NumberOfRecords}");
+    }
+
+    public enum OrderStatus
+    {
+        New, 
+        Confirm, 
+        Delivery, 
+        Cancel
+    }
+    
+    public class GetOrdersQuery
+    {
+        public DateTime? DateFrom { get; set; }
+    
+        public DateTime? DateTo { get; set; }
+
+        public OrderStatus? Status { get; set; }
+
+        public int PageNumber { get; set; }
+    
+        public int NumberOfRecords { get; set; }
+    }
+    
+    public class GridDataDto
+    {
+        public List<Order> Orders { get; set; } = new List<Order>();
+        public int TotalCount { get; set; }
+        public int NumberOfPages { get; set; }
+    }
+    
+    public class Order
+    {
+        public int Id { get; set; }
+    
+        public DateTime CreateDate { get; set; }
+    
+        public string StatusName { get; set; }
+        
+        public string ClientName { get; set; }
+    
+        public decimal OrderPrice { get; set; }
+    
+        public string? AdditionalInfo { get; set; }
+    }
+}
